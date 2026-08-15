@@ -416,30 +416,40 @@ body.red-mode .leaflet-tile-pane { filter: grayscale(1) sepia(1) hue-rotate(300d
 }
 
 @media (max-width: 720px) {
-  html { scroll-padding-top: 58px; }
-  .app-header { height: 58px; grid-template-columns: 1fr auto; padding: 0 14px; }
+  html { scroll-padding-top: 54px; }
+  .app-header { height: 54px; grid-template-columns: 1fr auto; padding: 0 14px; }
+  .brand { gap: 8px; font-size: 15px; }
+  .brand-mark { width: 10px; height: 10px; }
+  .app-header > .icon-button { width: 36px; height: 36px; }
   .app-header nav { display: none; }
-  .masthead { height: auto; min-height: 280px; }
+  .masthead { height: 230px; min-height: 230px; }
   .masthead-content, .query-inner, .place-status, .section-inner, footer { width: min(100% - 28px, var(--max)); }
-  .masthead-content { min-width: 0; padding: 42px 0; }
-  h1 { font-size: 50px; }
-  .masthead-content > p:last-child { max-width: 100%; font-size: 14px; overflow-wrap: anywhere; }
+  .masthead-content { min-width: 0; padding: 25px 0; }
+  .masthead-content .eyebrow { margin-bottom: 5px; }
+  h1 { margin-bottom: 7px; font-size: 42px; }
+  .masthead-content > p:last-child { max-width: 100%; font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+  .query-inner { gap: 7px; padding: 12px 0 8px; }
   .query-inner { grid-template-columns: minmax(0, 1fr) auto; }
-  .location-search { width: 100%; grid-column: 1 / -1; grid-template-columns: 38px minmax(0, 1fr) 64px; }
+  .location-search { width: 100%; height: 42px; grid-column: 1 / -1; grid-template-columns: 38px minmax(0, 1fr) 64px; }
   .location-search > button { min-width: 64px; }
-  .locate-button { min-width: 72px; padding: 0 10px; }
+  .locate-button { min-width: 72px; min-height: 42px; padding: 0 10px; }
+  .date-control { height: 42px; }
   .date-control { grid-column: 1; }
+  .query-inner > .icon-button { width: 42px; height: 42px; }
   .place-status { align-items: flex-start; }
   .place-status div { display: block; }
   .place-status strong, .place-status span { display: block; }
   .place-status > span { text-align: right; }
-  .section { padding: 58px 0; }
+  .place-status { padding-bottom: 10px; }
+  .section { padding: 44px 0; }
   .section-heading { align-items: flex-start; flex-direction: column; }
-  .section-heading h2 { font-size: 34px; }
+  .section-heading { gap: 10px; margin-bottom: 16px; }
+  .section-heading h2 { font-size: 29px; line-height: 1.15; }
   .overview-layout { border-left: 0; border-right: 0; }
-  .map-tool { height: 360px; }
-  #map { min-height: 358px; }
+  .map-tool { height: 300px; }
+  #map { min-height: 298px; }
   .night-summary { padding: 18px 0; }
+  .score-box strong { font-size: 44px; }
   .score-header, .score-track, .score-reason, .summary-facts, .next-action { margin-left: 14px; margin-right: 14px; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .weather-tabs, .target-tabs { width: 100%; overflow-x: auto; }
