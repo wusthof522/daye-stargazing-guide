@@ -4,256 +4,182 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e0d">
-  <meta name="description" content="2026年8月15日湖北大冶观星计划：90DX望远镜目标、寻星路线、银河摄影参数与现场清单。">
+  <meta name="description" content="输入地点和日期，自动计算云量、月相、最佳观星窗口与当晚可见目标。">
   <meta name="author" content="石浩源">
-  <title>大冶 · 今晚观星</title>
+  <title>观星地图</title>
   <link rel="preload" href="assets/hero-night-sky.webp" as="image">
+  <link rel="stylesheet" href="assets/leaflet.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="hero" id="top">
-    <img class="hero-image" src="assets/hero-night-sky.webp" alt="繁星覆盖的真实夜空，地面有低矮草丛剪影">
-    <div class="hero-shade" aria-hidden="true"></div>
-    <nav class="topbar" aria-label="主导航">
-      <a class="brand" href="#top">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span>DY / 30.04°N</span>
-      </a>
-      <button class="icon-button" id="nightToggle" type="button" title="切换红光模式" aria-label="切换红光模式">
-        <i data-lucide="moon"></i>
-      </button>
-    </nav>
-
-    <div class="hero-content">
-      <p class="eyebrow">2026.08.15 · 湖北大冶</p>
-      <h1>大冶 · 今晚观星</h1>
-      <p class="hero-summary">带上90DX，从月牙与金星开始，穿过夏季大三角，午夜前等土星升高。</p>
-      <div class="hero-status">
-        <div>
-          <span class="status-label">主观评级</span>
-          <strong>B+</strong>
-        </div>
-        <div>
-          <span class="status-label">最佳窗口</span>
-          <strong>20:40–00:30</strong>
-        </div>
-        <div>
-          <span class="status-label">月落</span>
-          <strong>20:28</strong>
-        </div>
-        <div>
-          <span class="status-label">光污染</span>
-          <strong>5.7级</strong>
-        </div>
-      </div>
-      <a class="primary-action" href="#conditions">
-        <i data-lucide="telescope"></i>
-        开始今晚计划
-      </a>
-    </div>
-    <a class="hero-next" href="#conditions" aria-label="查看今晚观测条件">
-      <span>19:02 日落 · 20:29 天文暮光结束</span>
-      <i data-lucide="chevron-down"></i>
+  <header class="app-header">
+    <a class="brand" href="#top" aria-label="观星地图首页">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>观星地图</span>
     </a>
+    <nav aria-label="页面导航">
+      <a href="#overview">概览</a>
+      <a href="#forecast">预报</a>
+      <a href="#targets">目标</a>
+      <a href="#assistant">助手</a>
+    </nav>
+    <button class="icon-button" id="redMode" type="button" title="切换红光模式" aria-label="切换红光模式">
+      <i data-lucide="moon"></i>
+    </button>
   </header>
 
-  <nav class="section-nav" aria-label="页面章节">
-    <a href="#conditions"><i data-lucide="gauge"></i><span>条件</span></a>
-    <a href="#plan"><i data-lucide="clock-3"></i><span>计划</span></a>
-    <a href="#targets"><i data-lucide="sparkles"></i><span>深空</span></a>
-    <a href="#finder"><i data-lucide="compass"></i><span>寻星</span></a>
-    <a href="#photo"><i data-lucide="camera"></i><span>银河</span></a>
-    <a href="#gear"><i data-lucide="backpack"></i><span>装备</span></a>
-  </nav>
+  <main id="top">
+    <section class="masthead">
+      <img src="assets/hero-night-sky.webp" alt="真实夜空中的银河与繁星">
+      <div class="masthead-shade" aria-hidden="true"></div>
+      <div class="masthead-content">
+        <p class="eyebrow" id="todayLabel">自动识别日期与地点</p>
+        <h1>观星地图</h1>
+        <p>输入你在哪里，今晚什么时候值得抬头、能看到什么，一次说明白。</p>
+      </div>
+    </section>
 
-  <main>
-    <section class="section conditions-section" id="conditions">
+    <section class="query-band" aria-label="地点与日期">
+      <div class="query-inner">
+        <form class="location-search" id="locationForm">
+          <i data-lucide="search"></i>
+          <label class="sr-only" for="locationInput">输入城市、区县或经纬度</label>
+          <input id="locationInput" name="location" autocomplete="off" placeholder="城市、区县，或 30.04, 114.91">
+          <button type="submit">搜索</button>
+          <div class="search-results" id="searchResults" role="listbox" hidden></div>
+        </form>
+        <button class="control-button locate-button" id="locateMe" type="button">
+          <i data-lucide="locate-fixed"></i><span>定位</span>
+        </button>
+        <label class="date-control">
+          <i data-lucide="calendar-days"></i>
+          <span class="sr-only">选择观测日期</span>
+          <input id="dateInput" type="date">
+        </label>
+        <button class="icon-button outlined" id="refreshForecast" type="button" title="刷新预报" aria-label="刷新预报">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+      <div class="place-status">
+        <div>
+          <strong id="placeName">载入地点…</strong>
+          <span id="placeMeta">--</span>
+        </div>
+        <span id="updateStatus">正在获取预报</span>
+      </div>
+    </section>
+
+    <section class="section overview-section" id="overview">
       <div class="section-inner">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">只看今晚有用的数据</p>
-            <h2>大冶观测条件</h2>
+            <p class="eyebrow">地点驱动</p>
+            <h2 id="overviewTitle">今晚观星条件</h2>
           </div>
-          <div class="location-lock"><i data-lucide="map-pin"></i><span>30.04°N, 114.91°E</span></div>
+          <span class="data-badge" id="forecastBadge">LIVE</span>
         </div>
 
-        <div class="now-recommendation">
-          <div class="now-icon"><i data-lucide="crosshair"></i></div>
-          <div>
-            <span class="status-label" id="nowLabel">此刻建议</span>
-            <strong id="nowTitle">先整理装备，18:40开始架设</strong>
-            <p id="nowDetail">今晚优先使用20mm目镜寻找目标，10mm目镜负责月面、双星与土星。</p>
+        <div class="overview-layout">
+          <div class="map-tool">
+            <div id="map" aria-label="点击地图选择观测地点"></div>
+            <p><i data-lucide="mouse-pointer-2"></i>点击地图任意位置即可重算预报</p>
           </div>
-          <span class="now-time" id="nowTime">计划日期 08.15</span>
-        </div>
 
-        <div class="condition-grid">
-          <article class="condition-card">
-            <div class="condition-icon"><i data-lucide="cloud"></i></div>
-            <span class="status-label">云量</span>
-            <strong>晚间转好</strong>
-            <p>20:00后模型预测约12%→1%，另一来源在21:00给出44%。</p>
-            <div class="mini-meter"><span style="width: 76%"></span></div>
-          </article>
-          <article class="condition-card">
-            <div class="condition-icon teal"><i data-lucide="eye"></i></div>
-            <span class="status-label">透明度</span>
-            <strong>中等</strong>
-            <p>21:00能见度约10.4km，午夜后可能降至6km左右。</p>
-            <div class="mini-meter teal"><span style="width: 58%"></span></div>
-          </article>
-          <article class="condition-card">
-            <div class="condition-icon moon"><i data-lucide="moon-star"></i></div>
-            <span class="status-label">月光干扰</span>
-            <strong>很低</strong>
-            <p>约10%娥眉月，20:28落下；深空观测窗口干净。</p>
-            <div class="mini-meter good"><span style="width: 90%"></span></div>
-          </article>
-          <article class="condition-card">
-            <div class="condition-icon red"><i data-lucide="droplets"></i></div>
-            <span class="status-label">结露风险</span>
-            <strong>高</strong>
-            <p>湿度由83%升至94%以上，遮光罩和防潮布必须带。</p>
-            <div class="mini-meter risk"><span style="width: 88%"></span></div>
-          </article>
-        </div>
-
-        <div class="forecast-tool">
-          <div class="forecast-header">
-            <div>
-              <span class="status-label">逐小时趋势</span>
-              <h3 id="forecastTitle">总云量 · %</h3>
+          <div class="night-summary">
+            <div class="score-header">
+              <div class="score-box">
+                <strong id="scoreValue">--</strong>
+                <span>/ 100</span>
+              </div>
+              <div>
+                <span class="status-label">综合观星指数</span>
+                <h3 id="scoreLabel">计算中</h3>
+              </div>
             </div>
-            <div class="segmented forecast-switch" role="group" aria-label="切换天气指标">
-              <button class="active" type="button" data-weather="cloud">云量</button>
-              <button type="button" data-weather="humidity">湿度</button>
-              <button type="button" data-weather="visibility">能见度</button>
-              <button type="button" data-weather="wind">风速</button>
+            <div class="score-track" aria-hidden="true"><span id="scoreBar"></span></div>
+            <p class="score-reason" id="scoreReason">正在综合云量、降水、透明度、月光和你的光污染等级。</p>
+
+            <dl class="summary-facts">
+              <div><dt>最佳窗口</dt><dd id="bestWindow">--</dd></div>
+              <div><dt>日落</dt><dd id="sunsetValue">--</dd></div>
+              <div><dt>天文黑夜</dt><dd id="darkValue">--</dd></div>
+              <div><dt>月相 / 月落</dt><dd id="moonValue">--</dd></div>
+            </dl>
+
+            <div class="next-action">
+              <i data-lucide="crosshair"></i>
+              <div>
+                <span class="status-label">行动建议</span>
+                <strong id="nextAction">等待预报</strong>
+                <p id="nextActionDetail">选择地点后自动生成。</p>
+              </div>
             </div>
           </div>
-          <div class="forecast-chart" id="forecastChart" aria-label="逐小时天气趋势图"></div>
-          <p class="forecast-reading" id="forecastReading">最清晰窗口集中在21:00–23:00；云少，但湿度持续上升。</p>
         </div>
 
-        <div class="ai-field-tool" id="aiAssistant">
-          <div class="ai-heading">
-            <div class="ai-mark"><i data-lucide="sparkles"></i></div>
-            <div>
-              <span class="status-label">Pollinations · AI增强</span>
-              <h3>现场观星助手</h3>
-            </div>
-            <span class="ai-status" id="aiStatus">按需调用</span>
-          </div>
-          <p class="ai-intro">描述现场变化，它会结合大冶坐标、今晚时刻、90DX和你的完成进度给出下一步。核心方位与安全规则不交给模型修改。</p>
-          <div class="quick-prompts" aria-label="常见现场问题">
-            <button type="button" data-prompt="现在云突然多了，今晚计划怎么调整？">云多了</button>
-            <button type="button" data-prompt="我找不到M57，下一步怎么做？">找不到M57</button>
-            <button type="button" data-prompt="镜片开始起雾，我该怎么处理？">镜片起雾</button>
-            <button type="button" data-prompt="我只剩30分钟，最值得看什么？">只剩30分钟</button>
-            <button type="button" data-prompt="土星看起来一直很糊，怎么调整？">土星很糊</button>
-          </div>
-          <form class="ai-form" id="aiForm">
-            <label class="sr-only" for="aiQuestion">现场问题</label>
-            <input id="aiQuestion" name="question" maxlength="180" placeholder="例如：东边有云，但南边很清，我先看什么？" autocomplete="off">
-            <button type="submit"><i data-lucide="send"></i><span>获取建议</span></button>
-          </form>
-          <div class="ai-response" id="aiResponse" aria-live="polite">
-            <i data-lucide="radio"></i>
-            <p>等待现场情况。点击快捷问题，或输入一句话。</p>
-          </div>
-          <p class="ai-privacy">仅在点击“获取建议”后，将问题和本页观测条件发送给Pollinations；接口不可用时自动使用本地规则。</p>
+        <div class="metric-grid">
+          <article>
+            <i data-lucide="cloud"></i>
+            <span>最佳时段云量</span>
+            <strong id="cloudMetric">--</strong>
+            <small id="cloudHint">总云量</small>
+          </article>
+          <article>
+            <i data-lucide="eye"></i>
+            <span>透明度</span>
+            <strong id="transparencyMetric">--</strong>
+            <small id="visibilityHint">能见度 --</small>
+          </article>
+          <article>
+            <i data-lucide="wind"></i>
+            <span>稳定度</span>
+            <strong id="seeingMetric">--</strong>
+            <small id="windHint">风速 --</small>
+          </article>
+          <article>
+            <i data-lucide="droplets"></i>
+            <span>结露风险</span>
+            <strong id="dewMetric">--</strong>
+            <small id="humidityHint">湿度 --</small>
+          </article>
+          <article>
+            <i data-lucide="moon-star"></i>
+            <span>月光干扰</span>
+            <strong id="moonMetric">--</strong>
+            <small id="moonHint">照明 --</small>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section plan-section" id="plan">
+    <section class="section forecast-section" id="forecast">
       <div class="section-inner">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">按时间执行</p>
-            <h2>今晚路线</h2>
+            <p class="eyebrow">日落至凌晨</p>
+            <h2>逐小时预报</h2>
           </div>
-          <button class="text-button" id="resetPlan" type="button" title="重置完成状态">
-            <i data-lucide="rotate-ccw"></i>
-            重置
-          </button>
+          <div class="segmented weather-tabs" role="group" aria-label="切换预报指标">
+            <button class="active" type="button" data-weather="score">指数</button>
+            <button type="button" data-weather="cloud">云量</button>
+            <button type="button" data-weather="humidity">湿度</button>
+            <button type="button" data-weather="visibility">能见度</button>
+            <button type="button" data-weather="wind">风速</button>
+            <button type="button" data-weather="rain">降水</button>
+          </div>
+        </div>
+        <div class="forecast-tool">
+          <div class="chart-title">
+            <div>
+              <span class="status-label">当前指标</span>
+              <h3 id="chartTitle">观星指数 · 分</h3>
+            </div>
+            <p id="chartInsight">--</p>
+          </div>
+          <div class="forecast-chart" id="forecastChart"></div>
         </div>
 
-        <div class="weather-strip" role="note">
-          <i data-lucide="cloud-sun"></i>
-          <p><strong>傍晚阵雨云，晚间趋于少云。</strong> 模型对21:00云量预测为1%–44%，湿度将升至85%–92%，露水与低空泛白是主要限制。</p>
-        </div>
-
-        <div class="progress-row">
-          <span id="progressText">0 / 7 已完成</span>
-          <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
-        </div>
-
-        <div class="timeline" id="timeline">
-          <article class="timeline-item" data-plan-id="setup">
-            <button class="timeline-check" type="button" aria-label="标记架设与校准完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>18:40</time>
-            <div>
-              <h3>架设与校准</h3>
-              <p>20mm目镜起步；赤道仪粗略朝北、纬度30°。用远处建筑校准寻星镜，避开太阳。</p>
-            </div>
-            <span class="timeline-tag">准备</span>
-          </article>
-          <article class="timeline-item" data-plan-id="moon-venus">
-            <button class="timeline-check" type="button" aria-label="标记月牙与金星观测完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>19:05</time>
-            <div>
-              <h3>月牙与金星</h3>
-              <p>西南偏西。金星在月牙左上方约10°；50×找准，100×看金星近半月形。</p>
-            </div>
-            <span class="timeline-tag accent">抢时间</span>
-          </article>
-          <article class="timeline-item" data-plan-id="south">
-            <button class="timeline-check" type="button" aria-label="标记南方低空目标完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>20:30</time>
-            <div>
-              <h3>先扫南方低空</h3>
-              <p>M22、M8、M11正处于较好高度。先看它们，再转向逐渐升高的目标。</p>
-            </div>
-            <span class="timeline-tag">深空</span>
-          </article>
-          <article class="timeline-item" data-plan-id="triangle">
-            <button class="timeline-check" type="button" aria-label="标记夏季大三角目标完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>21:15</time>
-            <div>
-              <h3>穿过夏季大三角</h3>
-              <p>辇道增七、天琴座双双星、M13、M27与M57。暗弱天体用余光观察。</p>
-            </div>
-            <span class="timeline-tag">主场</span>
-          </article>
-          <article class="timeline-item" data-plan-id="andromeda">
-            <button class="timeline-check" type="button" aria-label="标记仙女座星系观测完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>23:00</time>
-            <div>
-              <h3>M31与双星团</h3>
-              <p>M31东北方约36°高；双星团稍低。保持低倍，寻找灰白亮核和两团密集星点。</p>
-            </div>
-            <span class="timeline-tag">东北</span>
-          </article>
-          <article class="timeline-item" data-plan-id="saturn">
-            <button class="timeline-check" type="button" aria-label="标记土星观测完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>23:15</time>
-            <div>
-              <h3>土星与泰坦</h3>
-              <p>土星从正东升起，午夜约31°高。100×看细薄土星环，并寻找旁边约8等的泰坦。</p>
-            </div>
-            <span class="timeline-tag accent">主角</span>
-          </article>
-          <article class="timeline-item" data-plan-id="meteor">
-            <button class="timeline-check" type="button" aria-label="标记流星观测完成" aria-pressed="false"><i data-lucide="circle"></i></button>
-            <time>00:30</time>
-            <div>
-              <h3>放下望远镜</h3>
-              <p>面向东北至头顶，用肉眼等待英仙座流星。后半夜湿度更高，见好就收。</p>
-            </div>
-            <span class="timeline-tag">肉眼</span>
-          </article>
-        </div>
+        <div class="night-plan" id="nightPlan" aria-label="当晚关键时间"></div>
       </div>
     </section>
 
@@ -261,143 +187,125 @@
       <div class="section-inner">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">90DX可见</p>
-            <h2>深空目标</h2>
+            <p class="eyebrow">按当晚高度排序</p>
+            <h2>今晚看什么</h2>
           </div>
-          <div class="segmented" role="group" aria-label="按难度筛选">
-            <button class="active" type="button" data-filter="all">全部</button>
-            <button type="button" data-filter="easy">容易</button>
-            <button type="button" data-filter="medium">挑战</button>
+          <div class="segmented target-tabs" role="group" aria-label="筛选观测方式">
+            <button class="active" type="button" data-target-filter="all">全部</button>
+            <button type="button" data-target-filter="scope">望远镜</button>
+            <button type="button" data-target-filter="eye">肉眼</button>
+            <button type="button" data-target-filter="camera">摄影</button>
           </div>
         </div>
-        <p class="section-intro">它们在目镜中大多是灰白星团或淡雾，不会呈现长曝光照片的色彩。先低倍寻找，再根据视宁度加倍率。</p>
+        <p class="section-intro" id="targetIntro">目标会根据地点、日期、90DX口径与光污染重新排序。</p>
         <div class="target-grid" id="targetGrid"></div>
-      </div>
-    </section>
 
-    <section class="section finder-section" id="finder">
-      <div class="section-inner">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">星桥导航</p>
-            <h2>把目标带进目镜</h2>
+        <div class="target-inspector" id="targetInspector">
+          <div class="target-direction">
+            <div>
+              <span class="status-label">当前目标</span>
+              <h3 id="selectedTargetName">选择一个目标</h3>
+            </div>
+            <div class="compass-ring">
+              <span class="north">北</span><span class="east">东</span>
+              <span class="south">南</span><span class="west">西</span>
+              <div class="target-needle" id="targetNeedle"><i data-lucide="triangle"></i></div>
+              <div class="compass-center"></div>
+            </div>
+            <div class="bearing-value">
+              <strong id="selectedBearing">--°</strong>
+              <span id="selectedAltitude">仰角 --</span>
+            </div>
+            <button class="control-button" id="enableCompass" type="button">
+              <i data-lucide="navigation"></i><span>启用手机指南针</span>
+            </button>
           </div>
-        </div>
-
-        <div class="finder-layout">
-          <div class="finder-list" id="finderList" role="listbox" aria-label="选择寻星目标"></div>
-          <div class="compass-tool">
-            <div class="compass-header">
-              <div>
-                <span class="status-label">当前目标</span>
-                <h3 id="finderName">M22 球状星团</h3>
-              </div>
-              <button class="icon-button outlined" id="enableCompass" type="button" title="启用手机指南针" aria-label="启用手机指南针">
-                <i data-lucide="navigation"></i>
-              </button>
-            </div>
-            <div class="compass-stage" aria-label="目标方向指示器">
-              <div class="compass-ring" id="compassRing">
-                <span class="north">北</span>
-                <span class="east">东</span>
-                <span class="south">南</span>
-                <span class="west">西</span>
-                <div class="target-needle" id="targetNeedle">
-                  <i data-lucide="triangle"></i>
-                </div>
-                <div class="compass-center"></div>
-              </div>
-              <div class="bearing-readout">
-                <strong id="bearingValue">174°</strong>
-                <span id="altitudeValue">仰角 36° · 21:00</span>
-              </div>
-            </div>
-            <p class="sensor-status" id="sensorStatus">未启用方向传感器；方位角以正北0°、正东90°计算。</p>
-          </div>
-          <div class="route-panel">
-            <div class="route-summary">
-              <div>
-                <span class="status-label">基准星</span>
-                <strong id="anchorStar">斗宿四</strong>
-              </div>
-              <div>
-                <span class="status-label">建议倍率</span>
-                <strong id="finderPower">50× → 100×</strong>
-              </div>
-              <div>
-                <span class="status-label">目镜所见</span>
-                <strong id="finderAppearance">灰白圆球</strong>
-              </div>
-            </div>
-            <ol class="route-steps" id="routeSteps"></ol>
-            <p class="finder-tip"><i data-lucide="scan-search"></i><span id="finderTip">找不到时，用20mm目镜在目标附近做小范围井字扫描。</span></p>
+          <div class="target-guide">
+            <dl>
+              <div><dt>最佳时间</dt><dd id="selectedTime">--</dd></div>
+              <div><dt>建议倍率</dt><dd id="selectedPower">--</dd></div>
+              <div><dt>目镜所见</dt><dd id="selectedView">--</dd></div>
+            </dl>
+            <ol id="selectedSteps"></ol>
+            <p id="compassStatus">方位角以正北0°、正东90°计算。</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section photo-section" id="photo">
+    <section class="section setup-section" id="setup">
       <div class="section-inner">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">20:40–22:30</p>
-            <h2>手机拍银河</h2>
-          </div>
-          <div class="segmented phone-switch" role="tablist" aria-label="选择手机">
-            <button class="active" type="button" role="tab" aria-selected="true" data-phone="redmi">Redmi</button>
-            <button type="button" role="tab" aria-selected="false" data-phone="iphone">iPhone</button>
+            <p class="eyebrow">影响推荐结果</p>
+            <h2>我的装备</h2>
           </div>
         </div>
-
-        <div class="photo-layout">
-          <div class="milky-way-direction">
-            <div class="sky-band" aria-hidden="true">
-              <span class="star star-vega"></span>
-              <span class="star star-deneb"></span>
-              <span class="star star-altair"></span>
-              <span class="star-label label-vega">织女星</span>
-              <span class="star-label label-deneb">天津四</span>
-              <span class="star-label label-altair">牛郎星</span>
-              <span class="horizon-label">东南偏南 · 仰角45°–55°</span>
-            </div>
-            <p>银河从南方人马座向牛郎星、天津四延伸。今晚低空受湿气影响，优先拍经过夏季大三角的高空段。</p>
+        <div class="setup-layout">
+          <div class="equipment-tool">
+            <label>
+              <span>望远镜口径</span>
+              <output id="apertureOutput">90 mm</output>
+              <input id="apertureInput" type="range" min="50" max="250" step="10" value="90">
+            </label>
+            <label>
+              <span>焦距</span>
+              <output id="focalOutput">1000 mm</output>
+              <input id="focalInput" type="range" min="300" max="2000" step="50" value="1000">
+            </label>
+            <label>
+              <span>光污染等级</span>
+              <output id="bortleOutput">5.7</output>
+              <input id="bortleInput" type="range" min="1" max="9" step="0.1" value="5.7">
+            </label>
+            <p id="equipmentSummary">当前按90DX与接近波特尔6级天空推荐。</p>
           </div>
-          <div class="settings-tool">
-            <div class="settings-title">
+          <div class="photo-tool">
+            <div class="photo-header">
               <div>
-                <span class="status-label" id="phoneModeLabel">专业模式</span>
+                <span class="status-label">银河拍摄起始参数</span>
                 <h3 id="phoneName">Redmi K90 Pro Max</h3>
               </div>
-              <button class="icon-button outlined" id="copySettings" type="button" title="复制拍摄参数" aria-label="复制拍摄参数">
-                <i data-lucide="copy"></i>
-              </button>
+              <div class="segmented phone-tabs">
+                <button class="active" type="button" data-phone="redmi">Redmi</button>
+                <button type="button" data-phone="iphone">iPhone</button>
+              </div>
             </div>
-            <dl class="settings-grid" id="settingsGrid"></dl>
-            <p class="settings-note" id="settingsNote"></p>
+            <dl id="photoSettings"></dl>
+            <p id="photoNote">参数会结合光污染与当晚透明度调整。</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section gear-section" id="gear">
+    <section class="section assistant-section" id="assistant">
       <div class="section-inner">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">出发前两分钟</p>
-            <h2>装备与安全</h2>
+        <div class="assistant-tool">
+          <div class="assistant-heading">
+            <div class="assistant-mark"><i data-lucide="sparkles"></i></div>
+            <div>
+              <span class="status-label">Pollinations · AI增强</span>
+              <h2>现场观星助手</h2>
+            </div>
+            <span class="ai-status" id="aiStatus">按需调用</span>
           </div>
-        </div>
-        <div class="gear-grid" id="gearGrid">
-          <button class="gear-item" type="button" data-gear-id="scope" aria-pressed="false"><i data-lucide="square"></i><span>90DX、20mm与10mm目镜</span></button>
-          <button class="gear-item" type="button" data-gear-id="dew" aria-pressed="false"><i data-lucide="square"></i><span>遮光罩与防潮布</span></button>
-          <button class="gear-item" type="button" data-gear-id="light" aria-pressed="false"><i data-lucide="square"></i><span>红光手电</span></button>
-          <button class="gear-item" type="button" data-gear-id="phone" aria-pressed="false"><i data-lucide="square"></i><span>手机、三脚架与充电宝</span></button>
-          <button class="gear-item" type="button" data-gear-id="repellent" aria-pressed="false"><i data-lucide="square"></i><span>驱蚊液与饮水</span></button>
-          <button class="gear-item" type="button" data-gear-id="site" aria-pressed="false"><i data-lucide="square"></i><span>避开湖岸、矿坑和车流</span></button>
-        </div>
-        <div class="safety-callout">
-          <i data-lucide="shield-alert"></i>
-          <p><strong>太阳安全：</strong>19:02日落前，绝对不要让望远镜扫过太阳。镜片结露后自然回温，不要现场擦拭。</p>
+          <p>它会读取当前地点、日期、天气、装备和目标推荐。模型不可用时自动切换本地规则。</p>
+          <div class="quick-prompts">
+            <button type="button" data-prompt="现在云突然多了，计划怎么调整？">云多了</button>
+            <button type="button" data-prompt="我找不到当前推荐目标，下一步怎么做？">找不到目标</button>
+            <button type="button" data-prompt="镜片开始起雾，我该怎么处理？">镜片起雾</button>
+            <button type="button" data-prompt="我只剩30分钟，最值得看什么？">只剩30分钟</button>
+          </div>
+          <form class="assistant-form" id="assistantForm">
+            <label class="sr-only" for="assistantInput">现场问题</label>
+            <input id="assistantInput" maxlength="180" placeholder="例如：东边有云，但南边很清，我先看什么？">
+            <button type="submit"><i data-lucide="send"></i><span>获取建议</span></button>
+          </form>
+          <div class="assistant-response">
+            <i data-lucide="radio"></i>
+            <p id="assistantResponse">等待现场情况。你也可以先选择上面的快捷问题。</p>
+          </div>
+          <small>仅点击“获取建议”后发送当前观测条件；位置只保留到小数点后两位。</small>
         </div>
       </div>
     </section>
@@ -405,14 +313,22 @@
 
   <footer>
     <div>
-      <strong>大冶 · 今晚观星</strong>
-      <span>北纬30.04° · 东经114.91°</span>
+      <strong>观星地图</strong>
+      <span>天气与天文位置会随地点、日期自动更新</span>
       <span class="signature">Designed by 石浩源</span>
     </div>
-    <p>天文位置按2026-08-15中国标准时间计算。天气参考 <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> 与 <a href="https://wttr.in/" target="_blank" rel="noreferrer">wttr.in</a>；AI增强由 <a href="https://pollinations.ai/" target="_blank" rel="noreferrer">Pollinations</a> 提供；首图：<a href="https://images.nasa.gov/details/KSC-20191031-PH-GEB01_0003" target="_blank" rel="noreferrer">NASA/KSC</a>。</p>
+    <p>天气数据：<a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a>；地图：<a href="https://www.openstreetmap.org/" target="_blank" rel="noreferrer">OpenStreetMap</a> / CARTO；天文计算：SunCalc、Astronomy Engine；AI增强：<a href="https://pollinations.ai/" target="_blank" rel="noreferrer">Pollinations</a>；首图：NASA/KSC。</p>
   </footer>
 
+  <div class="loading-layer" id="loadingLayer" hidden>
+    <i data-lucide="loader-circle"></i>
+    <span>正在重算这片夜空…</span>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/leaflet.js"></script>
+  <script src="assets/suncalc.js"></script>
+  <script src="assets/astronomy.min.js"></script>
   <script src="assets/lucide.min.js"></script>
   <script src="app.js"></script>
 </body>
